@@ -70,7 +70,7 @@ public class MapExample {
     static SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("Cesco");
     static JavaSparkContext sc = new JavaSparkContext(conf);
     static SQLContext sqlContext = new SQLContext(sc);
-    
+
     public static void main(String[] args) throws Exception {
         JavaRDD<String> file = sc.textFile("/Users/hyeongyunmun/Dropbox/DetectFraudClick/data/train.csv", 1);
 
