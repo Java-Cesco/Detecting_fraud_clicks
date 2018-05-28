@@ -21,13 +21,13 @@ public class calForwardTimeDelta {
              .appName("Detecting Fraud Clicks")
              .getOrCreate();
 
-     //run methods here
+     //run methods hereu
      calcDelta(spark);
  }
 
  private static void calcDelta(SparkSession spark){
      // put the path the file you gonna deal with being placed
-     String filepath =  "/home/chris/.kaggle/competitions/talkingdata-adtracking-fraud-detection/mnt/ssd/kaggle-talkingdata2/competition_files/train_sample.csv";
+     String filepath =  "train_sample.csv";
 
      // create Dataset from files
      Dataset<Row> logDF = spark.read()
