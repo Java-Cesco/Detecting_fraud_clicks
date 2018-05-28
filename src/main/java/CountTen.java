@@ -20,7 +20,7 @@ public class CountTen {
         Dataset<Row> df = spark.read().format("csv")
                 .option("inferSchema", "true")
                 .option("header", "true")
-                .load("./data/train.csv");
+                .load("./data/train_.csv");
 
         // cast timestamp to long
         Dataset<Row> newdf = df.withColumn("utc_click_time", df.col("click_time").cast("long"));
@@ -28,11 +28,14 @@ public class CountTen {
         newdf = newdf.drop("click_time").drop("attributed_time");
 
         WindowSpec w = Window.partitionBy("ip")
-                .orderBy("utc_click_time");
+                .orderBy("utc_click_time")
+                .rangeBetween(Window.currentRow(),Window.currentRow()+600);
 //                .rowsBetween(Window.currentRow(), Window.unboundedPreceding());   //Boundary end is not a valid integer: -9223372036854775808
 
         newdf = newdf.withColumn("is_clicked_in_ten_mins",
-                (lead(col("utc_click_time"),1).over(w).minus(col("utc_click_time")).lt((long)600)).cast("long"));
+                (count("utc_click_time").over(w)).minus(1));    //본인것 포함할 것인지 정해야함.
+//        newdf = newdf.withColumn("is_clicked_in_ten_mins",
+//                (lead(col("utc_click_time"),1).over(w).minus(col("utc_click_time")).lt((long)600)).cast("long"));
 
         newdf.where("ip == '117898'").show(false);
     }
