@@ -19,25 +19,26 @@ public class Aggregation {
                 .master("local")
                 .getOrCreate();
         
+        // Aggregation
         Aggregation agg = new Aggregation();
         
         Dataset<Row> dataset = agg.loadCSVDataSet("./train_sample.csv", spark);
         dataset = agg.changeTimestempToLong(dataset);
         dataset = agg.averageValidClickCount(dataset);
         dataset = agg.clickTimeDelta(dataset);
-
-        dataset.where("ip == '5348' and app == '19'").show();
+        dataset = agg.countClickInTenMinutes(dataset);
         
+        //test
+        dataset.where("ip == '5348' and app == '19'").show(10);
     }
         
         
     private Dataset<Row> loadCSVDataSet(String path, SparkSession spark){
         // Read SCV to DataSet
-        Dataset<Row> dataset = spark.read().format("csv")
+        return spark.read().format("csv")
                 .option("inferSchema", "true")
                 .option("header", "true")
-                .load("train_sample.csv");
-        return dataset;
+                .load(path);
     }
     
     private Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
@@ -71,6 +72,16 @@ public class Aggregation {
                 lit(0)).otherwise(col("utc_click_time")).minus(when(col("lag(utc_click_time)").isNull(),
                 lit(0)).otherwise(col("lag(utc_click_time)"))));
         newDF = newDF.drop("lag(utc_click_time)");
+        return newDF;
+    }
+    
+    private Dataset<Row> countClickInTenMinutes(Dataset<Row> dataset){
+        WindowSpec w = Window.partitionBy("ip")
+                .orderBy("utc_click_time")
+                .rangeBetween(Window.currentRow(),Window.currentRow()+600);
+
+        Dataset<Row> newDF = dataset.withColumn("count_click_in_ten_mins",
+                (count("utc_click_time").over(w)).minus(1));    //TODO 본인것 포함할 것인지 정해야함.
         return newDF;
     }
 }
