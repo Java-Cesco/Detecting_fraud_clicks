@@ -9,8 +9,5 @@
         <module name="Detecting_fraud_clicks" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="9">
-      <module name="Detecting_fraud_clicks" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>
