@@ -12,6 +12,8 @@ public class Aggregation {
 
     public static void main(String[] args) throws Exception {
 
+        new GUI();
+
         //Create Session
         SparkSession spark = SparkSession
                 .builder()
