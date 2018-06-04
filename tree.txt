@@ -1,0 +1,83 @@
+ionTreeRegressionModel (uid=dtr_4046612293fa) of depth 5 with 55 nodes
+  If (feature 2 <= 0.5)
+     If (feature 0 <= 195796.5)
+	     If (feature 5 <= 3.5)
+		      If (feature 3 <= 29.5)
+			        If (feature 0 <= 65878.0)
+					       Predict: 0.12087912087912088
+						         Else (feature 0 > 65878.0)
+								        Predict: 0.0547945205479452
+										     Else (feature 3 > 29.5)
+											       If (feature 0 <= 175794.5)
+												          Predict: 0.0
+														        Else (feature 0 > 175794.5)
+																       Predict: 0.3333333333333333
+																	       Else (feature 5 > 3.5)
+																		        If (feature 1 <= 19.5)
+																				      Predict: 1.0
+																					       Else (feature 1 > 19.5)
+																						         Predict: 0.0
+																								    Else (feature 0 > 195796.5)
+																									    If (feature 1 <= 19.5)
+																										     If (feature 0 <= 212250.0)
+																											       If (feature 3 <= 3.5)
+																												          Predict: 0.6666666666666666
+																														        Else (feature 3 > 3.5)
+																																       Predict: 0.0
+																																	        Else (feature 0 > 212250.0)
+																																			      If (feature 3 <= 3.5)
+																																				         Predict: 0.15384615384615385
+																																						       Else (feature 3 > 3.5)
+																																							          Predict: 0.3181818181818182
+																																									      Else (feature 1 > 19.5)
+																																										       If (feature 3 <= 47.5)
+																																											         Predict: 0.0
+																																													      Else (feature 3 > 47.5)
+																																														        If (feature 5 <= 0.5)
+																																																       Predict: 0.5
+																																																	         Else (feature 5 > 0.5)
+																																																			        Predict: 0.0
+																																																					  Else (feature 2 > 0.5)
+																																																					     If (feature 1 <= 28.5)
+																																																						     If (feature 2 <= 3.5)
+																																																							      If (feature 0 <= 212250.0)
+																																																								        If (feature 0 <= 118331.5)
+																																																										       Predict: 2.176407740097345E-4
+																																																											         Else (feature 0 > 118331.5)
+																																																													        Predict: 8.741258741258741E-4
+																																																															     Else (feature 0 > 212250.0)
+																																																																       If (feature 4 <= 115.5)
+																																																																	          Predict: 0.04215456674473068
+																																																																			        Else (feature 4 > 115.5)
+																																																																					       Predict: 0.0016492578339747114
+																																																																						       Else (feature 2 > 3.5)
+																																																																							        If (feature 1 <= 18.5)
+																																																																									      Predict: 0.0
+																																																																										       Else (feature 1 > 18.5)
+																																																																											         If (feature 0 <= 123267.0)
+																																																																													        Predict: 0.14285714285714285
+																																																																															      Else (feature 0 > 123267.0)
+																																																																																         Predict: 0.3611111111111111
+																																																																																		    Else (feature 1 > 28.5)
+																																																																																			    If (feature 4 <= 279.0)
+																																																																																				     If (feature 0 <= 175794.5)
+																																																																																					       If (feature 4 <= 265.5)
+																																																																																						          Predict: 0.06231454005934718
+																																																																																								        Else (feature 4 > 265.5)
+																																																																																										       Predict: 0.6666666666666666
+																																																																																											        Else (feature 0 > 175794.5)
+																																																																																													      If (feature 4 <= 228.0)
+																																																																																														         Predict: 0.36923076923076925
+																																																																																																       Else (feature 4 > 228.0)
+																																																																																																	          Predict: 1.0
+																																																																																																			      Else (feature 4 > 279.0)
+																																																																																																				       If (feature 4 <= 333.5)
+																																																																																																					         If (feature 1 <= 30.5)
+																																																																																																							        Predict: 0.5
+																																																																																																									      Else (feature 1 > 30.5)
+																																																																																																										         Predict: 0.0
+																																																																																																												      Else (feature 4 > 333.5)
+																																																																																																													        If (feature 3 <= 8.5)
+																																																																																																															       Predict: 0.0234375
+																																																																																																																         Else (feature 3 > 8.5)
+																																																																																																																		        Predict: 0.002178649237472767

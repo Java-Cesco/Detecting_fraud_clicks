@@ -1,18 +1,28 @@
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.JSONArray;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.util.List;
+import java.io.*;
+import javax.swing.table.*;
+
+
 import static org.apache.spark.sql.functions.*;
-import static org.apache.spark.sql.functions.lit;
-import static org.apache.spark.sql.functions.when;
 
 public class Aggregation {
 
     public static void main(String[] args) throws Exception {
 
-        new GUI();
+
 
         //Create Session
         SparkSession spark = SparkSession
@@ -29,9 +39,13 @@ public class Aggregation {
         dataset = agg.averageValidClickCount(dataset);
         dataset = agg.clickTimeDelta(dataset);
         dataset = agg.countClickInTenMinutes(dataset);
-        
-        //test
-        dataset.where("ip == '5348' and app == '19'").show(10);
+
+        List<String> stringDataset = dataset.toJSON().collectAsList();
+        GUI gui = new GUI(stringDataset);
+
+
+
+
     }
         
         
