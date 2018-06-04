@@ -23,15 +23,16 @@ import java.util.*;
 // ml
 
 public class MapExample {
-
-    static SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("Cesco");
-    static JavaSparkContext sc = new JavaSparkContext(conf);
-    static SQLContext sqlContext = new SQLContext(sc);
     
     public static void main(String[] args) throws Exception {
         
         // Automatically identify categorical features, and index them.
         // Set maxCategories so features with > 4 distinct values are treated as continuous.
+        
+        Aggregation agg = new Aggregation();
+        
+        agg.
+        
         Dataset<Row> resultds = sqlContext.createDataFrame(result);
 
         System.out.println("schema start");

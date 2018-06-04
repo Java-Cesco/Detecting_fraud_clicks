@@ -22,7 +22,7 @@ public class Aggregation {
         // Aggregation
         Aggregation agg = new Aggregation();
         
-        Dataset<Row> dataset = agg.loadCSVDataSet("./train_sample.csv", spark);
+        Dataset<Row> dataset = Utill.loadCSVDataSet("./train_sample.csv", spark);
         dataset = agg.changeTimestempToLong(dataset);
         dataset = agg.averageValidClickCount(dataset);
         dataset = agg.clickTimeDelta(dataset);
@@ -31,16 +31,7 @@ public class Aggregation {
         //test
         dataset.where("ip == '5348' and app == '19'").show(10);
         
-        agg.saveCSVDataSet(dataset, "./agg_data");
-    }
-        
-        
-    private Dataset<Row> loadCSVDataSet(String path, SparkSession spark){
-        // Read SCV to DataSet
-        return spark.read().format("csv")
-                .option("inferSchema", "true")
-                .option("header", "true")
-                .load(path);
+        Utill.saveCSVDataSet(dataset, "./agg_data");
     }
     
     private Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
@@ -86,13 +77,5 @@ public class Aggregation {
                 (count("utc_click_time").over(w)).minus(1));    //TODO 본인것 포함할 것인지 정해야함.
         return newDF;
     }
-
-    private void saveCSVDataSet(Dataset<Row> dataset, String path){
-        // Read SCV to DataSet
-        dataset.repartition(1)
-                .write().format("csv")
-                .option("inferSchema", "true")
-                .option("header", "true")
-                .save(path);
-    }
+    
 }
