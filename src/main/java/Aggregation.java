@@ -30,6 +30,8 @@ public class Aggregation {
         
         //test
         dataset.where("ip == '5348' and app == '19'").show(10);
+        
+        agg.saveCSVDataSet(dataset, "./agg_data");
     }
         
         
@@ -83,5 +85,14 @@ public class Aggregation {
         Dataset<Row> newDF = dataset.withColumn("count_click_in_ten_mins",
                 (count("utc_click_time").over(w)).minus(1));    //TODO 본인것 포함할 것인지 정해야함.
         return newDF;
+    }
+
+    private void saveCSVDataSet(Dataset<Row> dataset, String path){
+        // Read SCV to DataSet
+        dataset.repartition(1)
+                .write().format("csv")
+                .option("inferSchema", "true")
+                .option("header", "true")
+                .save(path);
     }
 }
