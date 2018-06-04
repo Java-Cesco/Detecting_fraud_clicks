@@ -1,3 +1,5 @@
+package detact;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -5,12 +7,13 @@ import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 
 import static org.apache.spark.sql.functions.*;
-import static org.apache.spark.sql.functions.lit;
-import static org.apache.spark.sql.functions.when;
 
 public class Aggregation {
+    
+    public static String AGGREGATED_PATH = "agg_data";
+    public static String ORIGINAL_DATA_PATH = "train_sample.csv";
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         //Create Session
         SparkSession spark = SparkSession
@@ -19,10 +22,10 @@ public class Aggregation {
                 .master("local")
                 .getOrCreate();
         
-        // Aggregation
+        // detact.Aggregation
         Aggregation agg = new Aggregation();
         
-        Dataset<Row> dataset = Utill.loadCSVDataSet("./train_sample.csv", spark);
+        Dataset<Row> dataset = Utill.loadCSVDataSet(Aggregation.ORIGINAL_DATA_PATH, spark);
         dataset = agg.changeTimestempToLong(dataset);
         dataset = agg.averageValidClickCount(dataset);
         dataset = agg.clickTimeDelta(dataset);
@@ -32,7 +35,7 @@ public class Aggregation {
         dataset.where("ip == '5348' and app == '19'").show(10);
         
         // Save to scv
-        Utill.saveCSVDataSet(dataset, "./agg_data");
+        Utill.saveCSVDataSet(dataset, Aggregation.AGGREGATED_PATH);
     }
     
     private Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
@@ -75,7 +78,7 @@ public class Aggregation {
                 .rangeBetween(Window.currentRow(),Window.currentRow()+600);
 
         Dataset<Row> newDF = dataset.withColumn("count_click_in_ten_mins",
-                (count("utc_click_time").over(w)).minus(1));    //TODO 본인것 포함할 것인지 정해야함.
+                (count("utc_click_time").over(w)).minus(1));  
         return newDF;
     }
     

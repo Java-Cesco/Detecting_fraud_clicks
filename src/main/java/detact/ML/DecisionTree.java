@@ -1,7 +1,7 @@
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
+package detact.ML;
+
+import detact.Aggregation;
+import detact.Utill;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
@@ -12,35 +12,47 @@ import org.apache.spark.ml.feature.VectorIndexerModel;
 import org.apache.spark.ml.regression.DecisionTreeRegressionModel;
 import org.apache.spark.ml.regression.DecisionTreeRegressor;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SQLContext;
-import scala.Serializable;
-
-import java.util.*;
+import org.apache.spark.sql.SparkSession;
 
 
-// ml
+// DecisionTree Model
 
-public class MapExample {
+public class DecisionTree {
     
     public static void main(String[] args) throws Exception {
-        
-        // Automatically identify categorical features, and index them.
-        // Set maxCategories so features with > 4 distinct values are treated as continuous.
-        
-        Aggregation agg = new Aggregation();
-        
-        agg.
-        
-        Dataset<Row> resultds = sqlContext.createDataFrame(result);
 
-        System.out.println("schema start");
-        resultds.printSchema();
-        System.out.println("schema end");
+        //Create Session
+        SparkSession spark = SparkSession
+                .builder()
+                .appName("Detecting Fraud Clicks")
+                .master("local")
+                .getOrCreate();
+        
+        // load aggregated dataset
+        Dataset<Row> resultds = Utill.loadCSVDataSet(Aggregation.AGGREGATED_PATH, spark);
+
+        // show Dataset schema
+//        System.out.println("schema start");
+//        resultds.printSchema();
+//        String[] cols = resultds.columns();
+//        for (String col : cols) {
+//            System.out.println(col);
+//        }
+//        System.out.println("schema end");
 
         VectorAssembler assembler = new VectorAssembler()
-                .setInputCols(new String[]{"ip", "app", "device", "os", "channel", "clickInTenMins"})
+                .setInputCols(new String[]{
+                        "ip", 
+                        "app", 
+                        "device", 
+                        "os", 
+                        "channel", 
+                        "utc_click_time", 
+                        "avg_valid_click_count", 
+                        "click_time_delta",
+                        "count_click_in_ten_mins"
+                })
                 .setOutputCol("features");
 
         Dataset<Row> output = assembler.transform(resultds);
@@ -56,9 +68,11 @@ public class MapExample {
         Dataset<Row> trainingData = splits[0];
         Dataset<Row> testData = splits[1];
 
-        // Train a DecisionTree model.
+        // Train a detact.DecisionTreeionTree model.
         DecisionTreeRegressor dt = new DecisionTreeRegressor()
-                .setFeaturesCol("indexedFeatures").setLabelCol("attributed");
+                .setFeaturesCol("indexedFeatures")
+                .setLabelCol("is_attributed")
+                .setMaxDepth(10);
 
         // Chain indexer and tree in a Pipeline.
         Pipeline pipeline = new Pipeline()
@@ -71,19 +85,20 @@ public class MapExample {
         Dataset<Row> predictions = model.transform(testData);
 
         // Select example rows to display.
-        predictions.select("attributed", "features").show(5);
+        predictions.select("is_attributed", "features").show(5);
 
         // Select (prediction, true label) and compute test error.
         RegressionEvaluator evaluator = new RegressionEvaluator()
-                .setLabelCol("attributed")
+                .setLabelCol("is_attributed")
                 .setPredictionCol("prediction")
                 .setMetricName("rmse");
         double rmse = evaluator.evaluate(predictions);
         System.out.println("Root Mean Squared Error (RMSE) on test result = " + rmse);
-
+        
         DecisionTreeRegressionModel treeModel =
                 (DecisionTreeRegressionModel) (model.stages()[1]);
         System.out.println("Learned regression tree model:\n" + treeModel.toDebugString());
         
     }
+    
 }
