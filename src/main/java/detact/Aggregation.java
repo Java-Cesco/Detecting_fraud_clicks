@@ -37,7 +37,7 @@ public class Aggregation {
         dataset = agg.countClickInTenMinutes(dataset);
         
         // test
-        dataset.where("ip == '5348' and app == '19'").show(10);
+//        dataset.where("ip == '5348' and app == '19'").show(10);
         
         // Save to scv
         Utill.saveCSVDataSet(dataset, result_path);

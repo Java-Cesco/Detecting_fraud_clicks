@@ -16,8 +16,7 @@ public class Utill {
 
     public static void saveCSVDataSet(Dataset<Row> dataset, String path){
         // Read SCV to DataSet
-        dataset.repartition(1)
-                .write().format("com.databricks.spark.csv")
+        dataset.write().format("com.databricks.spark.csv")
                 .option("inferSchema", "true")
                 .option("header", "true")
                 .save(path);
