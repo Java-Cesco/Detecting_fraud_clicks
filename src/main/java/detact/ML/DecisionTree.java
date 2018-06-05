@@ -21,7 +21,14 @@ import org.apache.spark.sql.SparkSession;
 public class DecisionTree {
     
     public static void main(String[] args) throws Exception {
-
+        
+        if (args.length != 1) {
+            System.out.println("Usage: java -jar decisionTree.jar <agg_path>");
+            System.exit(0);
+        }
+        
+        String agg_path = args[0];
+        
         //Create Session
         SparkSession spark = SparkSession
                 .builder()
@@ -30,7 +37,7 @@ public class DecisionTree {
                 .getOrCreate();
         
         // load aggregated dataset
-        Dataset<Row> resultds = Utill.loadCSVDataSet(Aggregation.AGGREGATED_PATH, spark);
+        Dataset<Row> resultds = Utill.loadCSVDataSet(agg_path, spark);
 
         // show Dataset schema
 //        System.out.println("schema start");

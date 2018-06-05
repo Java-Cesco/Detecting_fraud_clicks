@@ -16,5 +16,15 @@ sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
 sudo yum install -y apache-maven
 mvn --version
 
+# clone repo
+git clone https://github.com/Java-Cesco/Detecting_fraud_clicks.git
+cd Detecting_fraud_clicks
+
+# maven build
+mvn package
+
+# run
+java -jar target/assembly/Detecting_fraud_clicks-aggregation.jar train_sample.csv agg_data
+java -jar target/assembly/Detecting_fraud_clicks-decisionTree.jar agg_data
 
 ```

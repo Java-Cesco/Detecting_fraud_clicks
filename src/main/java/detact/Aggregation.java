@@ -9,12 +9,17 @@ import org.apache.spark.sql.expressions.WindowSpec;
 import static org.apache.spark.sql.functions.*;
 
 public class Aggregation {
-    
-    public static String AGGREGATED_PATH = "agg_data";
-    public static String ORIGINAL_DATA_PATH = "train_sample.csv";
 
     public static void main(String[] args) {
-
+        
+        if (args.length != 2) {
+            System.out.println("Usage: java -jar aggregation.jar <data_path> <result_path>");
+            System.exit(0);
+        }
+        
+        String data_path = args[0];
+        String result_path = args[1];
+        
         //Create Session
         SparkSession spark = SparkSession
                 .builder()
@@ -25,7 +30,7 @@ public class Aggregation {
         // detact.Aggregation
         Aggregation agg = new Aggregation();
         
-        Dataset<Row> dataset = Utill.loadCSVDataSet(Aggregation.ORIGINAL_DATA_PATH, spark);
+        Dataset<Row> dataset = Utill.loadCSVDataSet(data_path, spark);
         dataset = agg.changeTimestempToLong(dataset);
         dataset = agg.averageValidClickCount(dataset);
         dataset = agg.clickTimeDelta(dataset);
@@ -35,7 +40,7 @@ public class Aggregation {
         dataset.where("ip == '5348' and app == '19'").show(10);
         
         // Save to scv
-        Utill.saveCSVDataSet(dataset, Aggregation.AGGREGATED_PATH);
+        Utill.saveCSVDataSet(dataset, result_path);
     }
     
     private Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
