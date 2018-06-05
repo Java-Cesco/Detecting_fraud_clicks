@@ -25,6 +25,7 @@ public class Aggregation {
                 .builder()
                 .appName("Detecting Fraud Clicks")
                 .master("local")
+                .config("spark.driver.memory", "2g")
                 .getOrCreate();
         
         // detact.Aggregation

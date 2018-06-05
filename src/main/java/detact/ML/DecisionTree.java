@@ -34,6 +34,7 @@ public class DecisionTree {
                 .builder()
                 .appName("Detecting Fraud Clicks")
                 .master("local")
+                .config("spark.driver.memory", "2g")
                 .getOrCreate();
         
         // load aggregated dataset
