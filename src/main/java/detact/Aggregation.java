@@ -43,7 +43,7 @@ public class Aggregation {
         Utill.saveCSVDataSet(dataset, result_path);
     }
     
-    private Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
+    public Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
         // cast timestamp to long
         Dataset<Row> newDF = dataset.withColumn("utc_click_time", dataset.col("click_time").cast("long"));
         newDF = newDF.withColumn("utc_attributed_time", dataset.col("attributed_time").cast("long"));
@@ -51,7 +51,7 @@ public class Aggregation {
         return newDF;
     }
          
-    private Dataset<Row> averageValidClickCount(Dataset<Row> dataset){
+    public Dataset<Row> averageValidClickCount(Dataset<Row> dataset){
         // set Window partition by 'ip' and 'app' order by 'utc_click_time' select rows between 1st row to current row
         WindowSpec w = Window.partitionBy("ip", "app")
                 .orderBy("utc_click_time")
@@ -65,7 +65,7 @@ public class Aggregation {
         return newDF;
     }
 
-    private Dataset<Row> clickTimeDelta(Dataset<Row> dataset){
+    public Dataset<Row> clickTimeDelta(Dataset<Row> dataset){
         WindowSpec w = Window.partitionBy ("ip")
                 .orderBy("utc_click_time");
 
@@ -77,7 +77,7 @@ public class Aggregation {
         return newDF;
     }
     
-    private Dataset<Row> countClickInTenMinutes(Dataset<Row> dataset){
+    public Dataset<Row> countClickInTenMinutes(Dataset<Row> dataset){
         WindowSpec w = Window.partitionBy("ip")
                 .orderBy("utc_click_time")
                 .rangeBetween(Window.currentRow(),Window.currentRow()+600);
