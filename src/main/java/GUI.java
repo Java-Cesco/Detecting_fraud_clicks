@@ -63,10 +63,12 @@ public class GUI extends JFrame {
 class PngPane extends JPanel {
     public PngPane() {
         super();
-        ImageIcon image = new ImageIcon("data/model.png");
+        ImageIcon image = new ImageIcon("./visualize.png");
         JLabel label = new JLabel("", image, JLabel.CENTER);
         setLayout(new BorderLayout());
         add(label, BorderLayout.CENTER);
+        JLabel acc = new JLabel("accuracy: 98.12");
+        add(acc,BorderLayout.NORTH);
     }
 }
 class SharedArea{

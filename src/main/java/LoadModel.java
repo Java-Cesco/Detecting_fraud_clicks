@@ -10,8 +10,8 @@ public class LoadModel {
                 .master("local")
                 .getOrCreate();
 
-        PipelineModel model = PipelineModel.load("decisionTree.model");
-//        DecisionTreeRegressionModel treeModel = (DecisionTreeRegressionModel) (model.stages()[1]);
-//        System.out.println(treeModel.toDebugString());
+        PipelineModel model = PipelineModel.load("decisionTree");
+        DecisionTreeRegressionModel treeModel = (DecisionTreeRegressionModel) (model.stages()[1]);
+        System.out.println(treeModel.toDebugString());
     }
 }
