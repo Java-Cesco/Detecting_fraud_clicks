@@ -1,7 +1,5 @@
-package detact.ML;
+package detact;
 
-import detact.Aggregation;
-import detact.Utill;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
@@ -15,56 +13,47 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-
-// DecisionTree Model
-
-public class DecisionTree {
-    
-    public static void main(String[] args) throws Exception {
-        
+public class Main {
+    public static void main(String[] args) throws Exception{
         if (args.length != 1) {
-            System.out.println("Usage: java -jar decisionTree.jar <agg_path>");
+            System.out.println("Usage: java -jar aggregation.jar <data_path>");
             System.exit(0);
         }
-        
-        String agg_path = args[0];
-        
+
+        String data_path = args[0];
+
         //Create Session
         SparkSession spark = SparkSession
                 .builder()
                 .appName("Detecting Fraud Clicks")
                 .master("local")
-                .config("spark.driver.memory", "2g")
                 .getOrCreate();
-        
-        // load aggregated dataset
-        Dataset<Row> resultds = Utill.loadCSVDataSet(agg_path, spark);
 
-        // show Dataset schema
-//        System.out.println("schema start");
-//        resultds.printSchema();
-//        String[] cols = resultds.columns();
-//        for (String col : cols) {
-//            System.out.println(col);
-//        }
-//        System.out.println("schema end");
+        // detact.Aggregation
+        Aggregation agg = new Aggregation();
+
+        Dataset<Row> dataset = Utill.loadCSVDataSet(data_path, spark);
+        dataset = agg.changeTimestempToLong(dataset);
+        dataset = agg.averageValidClickCount(dataset);
+        dataset = agg.clickTimeDelta(dataset);
+        dataset = agg.countClickInTenMinutes(dataset);
 
         VectorAssembler assembler = new VectorAssembler()
                 .setInputCols(new String[]{
-                        "ip", 
-                        "app", 
-                        "device", 
-                        "os", 
-                        "channel", 
-                        "utc_click_time", 
-                        "avg_valid_click_count", 
+                        "ip",
+                        "app",
+                        "device",
+                        "os",
+                        "channel",
+                        "utc_click_time",
+                        "avg_valid_click_count",
                         "click_time_delta",
                         "count_click_in_ten_mins"
                 })
                 .setOutputCol("features");
 
-        Dataset<Row> output = assembler.transform(resultds);
-        
+        Dataset<Row> output = assembler.transform(dataset);
+
         VectorIndexerModel featureIndexer = new VectorIndexer()
                 .setInputCol("features")
                 .setOutputCol("indexedFeatures")
@@ -89,8 +78,13 @@ public class DecisionTree {
         // Train model. This also runs the indexer.
         PipelineModel model = pipeline.fit(trainingData);
 
+        // save model
+        model.save("./decisionTree");
+
+        PipelineModel p_model = PipelineModel.load("./decisionTree");
+        
         // Make predictions.
-        Dataset<Row> predictions = model.transform(testData);
+        Dataset<Row> predictions = p_model.transform(testData);
 
         // Select example rows to display.
         predictions.select("is_attributed", "features").show(5);
@@ -102,20 +96,10 @@ public class DecisionTree {
                 .setMetricName("rmse");
         double rmse = evaluator.evaluate(predictions);
         System.out.println("Root Mean Squared Error (RMSE) on test result = " + rmse);
-        
+
         DecisionTreeRegressionModel treeModel =
-                (DecisionTreeRegressionModel) (model.stages()[1]);
+                (DecisionTreeRegressionModel) (p_model.stages()[1]);
         System.out.println("Learned regression tree model:\n" + treeModel.toDebugString());
         
-        // save model
-        model.save("./decisionTree");
-        
-        // load model 
-        PipelineModel load_mode = PipelineModel.load("./decisionTree");
-
-        // Make predictions.
-        Dataset<Row> load_pred = model.transform(testData);
-        
     }
-    
 }
