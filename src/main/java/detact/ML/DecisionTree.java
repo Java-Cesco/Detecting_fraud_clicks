@@ -107,7 +107,13 @@ public class DecisionTree {
         System.out.println("Learned regression tree model:\n" + treeModel.toDebugString());
         
         // save model
-        model.save("./decisionTree.model");
+        model.save("./decisionTree");
+        
+        // load model 
+        PipelineModel load_mode = PipelineModel.load("./decisionTree");
+
+        // Make predictions.
+        Dataset<Row> load_pred = model.transform(testData);
         
     }
     

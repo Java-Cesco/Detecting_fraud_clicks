@@ -78,8 +78,13 @@ public class Main {
         // Train model. This also runs the indexer.
         PipelineModel model = pipeline.fit(trainingData);
 
+        // save model
+        model.save("./decisionTree");
+
+        PipelineModel p_model = PipelineModel.load("./decisionTree");
+        
         // Make predictions.
-        Dataset<Row> predictions = model.transform(testData);
+        Dataset<Row> predictions = p_model.transform(testData);
 
         // Select example rows to display.
         predictions.select("is_attributed", "features").show(5);
@@ -93,10 +98,8 @@ public class Main {
         System.out.println("Root Mean Squared Error (RMSE) on test result = " + rmse);
 
         DecisionTreeRegressionModel treeModel =
-                (DecisionTreeRegressionModel) (model.stages()[1]);
+                (DecisionTreeRegressionModel) (p_model.stages()[1]);
         System.out.println("Learned regression tree model:\n" + treeModel.toDebugString());
-
-        // save model
-        model.save("./decisionTree.model");
+        
     }
 }
