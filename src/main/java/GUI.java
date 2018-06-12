@@ -64,9 +64,11 @@ class PngPane extends JPanel {
     public PngPane() {
         super();
         ImageIcon image = new ImageIcon("./visualize.png");
+        JScrollPane pan = new JScrollPane();
         JLabel label = new JLabel("", image, JLabel.CENTER);
+        pan.setViewportView(label);
         setLayout(new BorderLayout());
-        add(label, BorderLayout.CENTER);
+        add(pan, BorderLayout.CENTER);
         JLabel acc = new JLabel("accuracy: 98.12");
         add(acc,BorderLayout.NORTH);
     }
