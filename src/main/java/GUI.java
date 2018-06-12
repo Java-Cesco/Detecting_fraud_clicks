@@ -1,3 +1,10 @@
+import org.apache.spark.ml.Pipeline;
+import org.apache.spark.ml.PipelineModel;
+import org.apache.spark.ml.PipelineStage;
+import org.apache.spark.ml.feature.VectorAssembler;
+import org.apache.spark.ml.feature.VectorIndexer;
+import org.apache.spark.ml.feature.VectorIndexerModel;
+import org.apache.spark.ml.regression.DecisionTreeRegressor;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -5,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
@@ -61,7 +69,9 @@ class PngPane extends JPanel {
         add(label, BorderLayout.CENTER);
     }
 }
-
+class SharedArea{
+    Dataset<Row> data;
+}
 class CreateTable_tab extends JPanel{
     public JPanel centre_pane = new JPanel();
     public JPanel south_pane = new JPanel();
@@ -82,7 +92,7 @@ class CreateTable_tab extends JPanel{
     private DefaultTableModel tableModel3 = new DefaultTableModel(new Object[]{"unknown"},1);
 
     public CsvFile_chooser temp = new CsvFile_chooser();
-
+    private String current_state="100";
 
     public CreateTable_tab(){
         super();
@@ -103,13 +113,16 @@ class CreateTable_tab extends JPanel{
         // sub Panel 3
         pan3.setViewportView(table3);
         centre_pane.add(pan3);
-
+        add(centre_pane, BorderLayout.CENTER);
         //sub Panel 4
         south_pane.setLayout(new FlowLayout());
         south_pane.add(btn1);
+
         btn1.addActionListener(new ActionListener() {
-            @Override
+
             public void actionPerformed(ActionEvent e) {
+
+
                 if(temp.is_selected) {
                     String path = temp.selected_file.getAbsolutePath();
                     // 1st Column Raw Data
@@ -126,20 +139,105 @@ class CreateTable_tab extends JPanel{
                     TableCreator table_maker = new TableCreator();
 
                     Dataset<Row> dataset = agg.loadCSVDataSet(path, spark);
-                    List<String> stringDataset_Raw = dataset.toJSON().collectAsList();
-                    String[] header_r = {"ip", "app", "device", "os", "channel", "click_time", "is_attributed"};
-                    table1.setModel(table_maker.getTableModel(stringDataset_Raw, header_r));
+                    if(current_state.equals("100")){
+                        List<String> stringDataset_Raw = dataset.toJSON().collectAsList();
+                        String[] header_r = {"ip", "app", "device", "os", "channel", "click_time", "is_attributed"};
+                        table1.setModel(table_maker.getTableModel(stringDataset_Raw, header_r));
+                        current_state="200";
+                    }else if(current_state.equals("200")){
+                        // 2nd Column Data with features
+                        // Adding features
+                        dataset = agg.changeTimestempToLong(dataset);
+                        dataset = agg.averageValidClickCount(dataset);
+                        dataset = agg.clickTimeDelta(dataset);
+                        dataset = agg.countClickInTenMinutes(dataset);
+                        List<String> stringDataset_feat = dataset.toJSON().collectAsList();
+                        String[] header_f = {"ip", "app", "device", "os", "channel", "is_attributed", "click_time",
+                                "avg_valid_click_count", "click_time_delta", "count_click_in_ten_mins"};
+                        table2.setModel(table_maker.getTableModel(stringDataset_feat, header_f));
+                        current_state="300";
+                    }else if(current_state.equals("300")){
+                        dataset = agg.changeTimestempToLong(dataset);
+                        dataset = agg.averageValidClickCount(dataset);
+                        dataset = agg.clickTimeDelta(dataset);
+                        dataset = agg.countClickInTenMinutes(dataset);
 
-                    // 2nd Column Data with features
-                    // Adding features
-                    dataset = agg.changeTimestempToLong(dataset);
-                    dataset = agg.averageValidClickCount(dataset);
-                    dataset = agg.clickTimeDelta(dataset);
-                    dataset = agg.countClickInTenMinutes(dataset);
-                    List<String> stringDataset_feat = dataset.toJSON().collectAsList();
-                    String[] header_f = {"ip", "app", "device", "os", "channel", "is_attributed", "click_time",
-                            "avg_valid_click_count", "click_time_delta", "count_click_in_ten_mins"};
-                    table2.setModel(table_maker.getTableModel(stringDataset_feat, header_f));
+                        VectorAssembler assembler = new VectorAssembler()
+                                .setInputCols(new String[]{
+                                        "ip",
+                                        "app",
+                                        "device",
+                                        "os",
+                                        "channel",
+                                        "utc_click_time",
+                                        "avg_valid_click_count",
+                                        "click_time_delta",
+                                        "count_click_in_ten_mins"
+                                })
+                                .setOutputCol("features");
+
+                        Dataset<Row> output = assembler.transform(dataset);
+
+                        VectorIndexerModel featureIndexer = new VectorIndexer()
+                                .setInputCol("features")
+                                .setOutputCol("indexedFeatures")
+                                .setMaxCategories(2)
+                                .fit(output);
+
+                        // Split the result into training and test sets (30% held out for testing).
+//                        Dataset<Row>[] splits = output.randomSplit(new double[]{0.7, 0.3});
+//                        Dataset<Row> trainingData = splits[0];
+//                        Dataset<Row> testData = splits[1];
+
+
+
+                        // Train a detact.DecisionTreeionTree model.
+                        DecisionTreeRegressor dt = new DecisionTreeRegressor()
+                                .setFeaturesCol("indexedFeatures")
+                                .setLabelCol("is_attributed")
+                                .setMaxDepth(10);
+
+                        // Chain indexer and tree in a Pipeline.
+                        Pipeline pipeline = new Pipeline()
+                                .setStages(new PipelineStage[]{featureIndexer, dt});
+
+                        // Train model. This also runs the indexer.
+                        PipelineModel model = pipeline.fit(output);
+
+                        // save model
+                        try {
+                            model.save("./decisionTree");
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+
+                        PipelineModel p_model = PipelineModel.load("./decisionTree");
+
+                        // Make predictions.
+                        Dataset<Row> predictions = p_model.transform(assembler.transform(dataset));
+                        predictions = predictions.drop("app")
+                                .drop("device")
+                                .drop("os")
+                                .drop("channel")
+                                .drop("utc_click_time")
+                                .drop("utc_attributed_time")
+                                .drop("avg_valid_click_count")
+                                .drop("click_time_delta")
+                                .drop("count_click_in_ten_mins")
+                                .drop("features")
+                                .drop("indexedFeatures");
+                        predictions.printSchema();
+                        List<String> stringDataset_feat = predictions.toJSON().collectAsList();
+                        String[] header_f = {"ip","is_attributed","prediction"};
+                        table3.setModel(table_maker.getTableModel(stringDataset_feat, header_f));
+//
+//
+//
+                        current_state="400";
+                    }
+
+
+
 
 
                     // 3nd Column Final results
@@ -148,7 +246,7 @@ class CreateTable_tab extends JPanel{
                 }
             }
         });
-        add(centre_pane, BorderLayout.CENTER);
+
         add(south_pane, BorderLayout.SOUTH);
 
 
@@ -181,7 +279,7 @@ class CsvFile_chooser extends JPanel{
         add(path_field);
         add(browser);
         browser.addActionListener(new ActionListener(){
-            @Override
+
             public void actionPerformed(ActionEvent e) {
                 Object obj = e.getSource();
                 if((JButton)obj == browser){
@@ -298,3 +396,5 @@ class Aggregation {
         return newDF;
     }
 }
+
+
