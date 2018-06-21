@@ -1,6 +1,9 @@
+package detact;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONArray;
+
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -19,45 +22,35 @@ import javax.swing.table.*;
 import static org.apache.spark.sql.functions.*;
 
 public class Aggregation {
-
     public static void main(String[] args) throws Exception {
-
-
+        if (args.length != 2) {
+            System.out.println("Usage: java -jar aggregation.jar <data_path> <result_path>");
+            System.exit(0);
+        }
+        
+        String data_path = args[0];
+        String result_path = args[1];
 
         //Create Session
         SparkSession spark = SparkSession
                 .builder()
                 .appName("Detecting Fraud Clicks")
                 .master("local")
+                .config("spark.driver.memory", "2g")
                 .getOrCreate();
         
-        // Aggregation
+        // detact.Aggregation
         Aggregation agg = new Aggregation();
         
-        Dataset<Row> dataset = agg.loadCSVDataSet("./train_sample.csv", spark);
+        Dataset<Row> dataset = Utill.loadCSVDataSet(data_path, spark);
         dataset = agg.changeTimestempToLong(dataset);
         dataset = agg.averageValidClickCount(dataset);
         dataset = agg.clickTimeDelta(dataset);
         dataset = agg.countClickInTenMinutes(dataset);
-
-        List<String> stringDataset = dataset.toJSON().collectAsList();
-        GUI gui = new GUI(stringDataset);
-
-
-
-
-    }
-        
-        
-    private Dataset<Row> loadCSVDataSet(String path, SparkSession spark){
-        // Read SCV to DataSet
-        return spark.read().format("csv")
-                .option("inferSchema", "true")
-                .option("header", "true")
-                .load(path);
+        Utill.saveCSVDataSet(dataset, result_path);
     }
     
-    private Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
+    public Dataset<Row> changeTimestempToLong(Dataset<Row> dataset){
         // cast timestamp to long
         Dataset<Row> newDF = dataset.withColumn("utc_click_time", dataset.col("click_time").cast("long"));
         newDF = newDF.withColumn("utc_attributed_time", dataset.col("attributed_time").cast("long"));
@@ -65,7 +58,7 @@ public class Aggregation {
         return newDF;
     }
          
-    private Dataset<Row> averageValidClickCount(Dataset<Row> dataset){
+    public Dataset<Row> averageValidClickCount(Dataset<Row> dataset){
         // set Window partition by 'ip' and 'app' order by 'utc_click_time' select rows between 1st row to current row
         WindowSpec w = Window.partitionBy("ip", "app")
                 .orderBy("utc_click_time")
@@ -79,7 +72,7 @@ public class Aggregation {
         return newDF;
     }
 
-    private Dataset<Row> clickTimeDelta(Dataset<Row> dataset){
+    public Dataset<Row> clickTimeDelta(Dataset<Row> dataset){
         WindowSpec w = Window.partitionBy ("ip")
                 .orderBy("utc_click_time");
 
@@ -91,13 +84,14 @@ public class Aggregation {
         return newDF;
     }
     
-    private Dataset<Row> countClickInTenMinutes(Dataset<Row> dataset){
+    public Dataset<Row> countClickInTenMinutes(Dataset<Row> dataset){
         WindowSpec w = Window.partitionBy("ip")
                 .orderBy("utc_click_time")
                 .rangeBetween(Window.currentRow(),Window.currentRow()+600);
 
         Dataset<Row> newDF = dataset.withColumn("count_click_in_ten_mins",
-                (count("utc_click_time").over(w)).minus(1));    //TODO 본인것 포함할 것인지 정해야함.
+                (count("utc_click_time").over(w)).minus(1));  
         return newDF;
     }
+    
 }
