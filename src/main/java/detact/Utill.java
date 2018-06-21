@@ -5,7 +5,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class Utill {
-    
+
     public static Dataset<Row> loadCSVDataSet(String path, SparkSession spark){
         // Read SCV to DataSet
         return spark.read().format("com.databricks.spark.csv")
